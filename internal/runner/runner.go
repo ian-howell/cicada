@@ -100,9 +100,3 @@ func (r *Runner) runBuild(ctx context.Context, build *model.Build) error {
 func newBuildID() string {
 	return ulid.Make().String()
 }
-
-// executeDAG is implemented in dag_executor.go (Task 8).
-// Stub here to allow compilation.
-func (r *Runner) executeDAG(ctx context.Context, build *model.Build, p *model.Pipeline, volumeName, repoDir string) error {
-	return fmt.Errorf("executeDAG not yet implemented")
-}

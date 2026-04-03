@@ -36,7 +36,7 @@ func RunStep(ctx context.Context, step model.Step, volumeName, repoDir, logDir s
 			Image:      step.Image,
 			Cmd:        []string{"sh", "-c", cmd},
 			Env:        env,
-			WorkingDir: "/workspace",
+			WorkingDir: "/repo",
 		},
 		HostConfig: &container.HostConfig{
 			Mounts: []mount.Mount{

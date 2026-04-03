@@ -1,5 +1,5 @@
 name: ci
-image: golang:1.22
+image: golang:latest
 on:
   - push
   - pull_request

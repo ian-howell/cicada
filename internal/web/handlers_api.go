@@ -1,11 +1,14 @@
 package web
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -23,7 +26,11 @@ func (srv *Server) handleAPIBuild(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	build, err := srv.store.GetBuild(id)
 	if err != nil {
-		http.Error(w, "not found", http.StatusNotFound)
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, "not found", http.StatusNotFound)
+		} else {
+			http.Error(w, "internal error", http.StatusInternalServerError)
+		}
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -64,12 +71,21 @@ func (srv *Server) handleLogStream(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	f, err := os.Open(absPath)
-	if err != nil {
-		// File may not exist yet if step hasn't started.
-		fmt.Fprintf(w, "data: (waiting for log)\n\n")
-		flusher.Flush()
-		return
+	// Wait for the file to appear (log may not be written yet).
+	var f *os.File
+	for {
+		var err error
+		f, err = os.Open(absPath)
+		if err == nil {
+			break
+		}
+		select {
+		case <-r.Context().Done():
+			return
+		case <-time.After(500 * time.Millisecond):
+			fmt.Fprintf(w, "data: (waiting for log)\n\n")
+			flusher.Flush()
+		}
 	}
 	defer f.Close()
 
@@ -84,7 +100,11 @@ func (srv *Server) handleLogStream(w http.ResponseWriter, r *http.Request) {
 		case <-ticker.C:
 			n, _ := f.Read(buf)
 			if n > 0 {
-				fmt.Fprintf(w, "data: %s\n\n", buf[:n])
+				lines := strings.Split(string(buf[:n]), "\n")
+				for _, line := range lines {
+					fmt.Fprintf(w, "data: %s\n", line)
+				}
+				fmt.Fprintf(w, "\n")
 				flusher.Flush()
 			}
 		}

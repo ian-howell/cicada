@@ -1,7 +1,7 @@
 {{template "base.html" .}}
 {{define "content"}}
 <h2>Builds</h2>
-<div id="builds-list" hx-get="/builds" hx-trigger="every 5s" hx-swap="outerHTML">
+<div id="builds-list" hx-get="/builds" hx-trigger="every 5s" hx-swap="outerHTML" hx-select="#builds-list">
     <table>
         <thead>
             <tr>
@@ -16,10 +16,10 @@
         <tbody>
         {{range .Builds}}
         <tr>
-            <td><a href="/builds/{{.ID}}">{{slice .ID 0 8}}</a></td>
+            <td><a href="/builds/{{.ID}}">{{shortID .ID}}</a></td>
             <td>{{.PipelineName}}</td>
             <td>{{.Ref}}</td>
-            <td>{{slice .CommitSHA 0 7}}</td>
+            <td>{{shortSHA .CommitSHA}}</td>
             <td>{{.Status}}</td>
             <td>{{.CreatedAt.Format "2006-01-02 15:04:05"}}</td>
         </tr>

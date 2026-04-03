@@ -1,6 +1,8 @@
 package web
 
 import (
+	"database/sql"
+	"errors"
 	"net/http"
 )
 
@@ -20,7 +22,11 @@ func (srv *Server) handleBuildDetail(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	build, err := srv.store.GetBuild(id)
 	if err != nil {
-		http.Error(w, "build not found", http.StatusNotFound)
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, "build not found", http.StatusNotFound)
+		} else {
+			http.Error(w, "internal error", http.StatusInternalServerError)
+		}
 		return
 	}
 	steps, err := srv.store.ListStepResults(id)

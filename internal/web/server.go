@@ -2,6 +2,7 @@ package web
 
 import (
 	"embed"
+	"fmt"
 	"html/template"
 	"io/fs"
 	"net/http"
@@ -28,7 +29,21 @@ type Server struct {
 
 // New creates a Server and registers all routes.
 func New(s *store.Store, registry *webhook.Registry, sched *scheduler.Scheduler) (*Server, error) {
-	tmpl, err := template.ParseFS(templateFS, "templates/*.html")
+	funcs := template.FuncMap{
+		"shortID": func(s string) string {
+			if len(s) > 8 {
+				return s[:8]
+			}
+			return s
+		},
+		"shortSHA": func(s string) string {
+			if len(s) > 7 {
+				return s[:7]
+			}
+			return s
+		},
+	}
+	tmpl, err := template.New("").Funcs(funcs).ParseFS(templateFS, "templates/*.html")
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +60,10 @@ func New(s *store.Store, registry *webhook.Registry, sched *scheduler.Scheduler)
 }
 
 func (srv *Server) registerRoutes() {
-	staticContent, _ := fs.Sub(staticFS, "static")
+	staticContent, err := fs.Sub(staticFS, "static")
+	if err != nil {
+		panic(fmt.Sprintf("web: failed to sub static fs: %v", err))
+	}
 	srv.mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticContent))))
 
 	srv.mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {

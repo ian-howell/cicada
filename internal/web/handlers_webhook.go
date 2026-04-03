@@ -1,6 +1,7 @@
 package web
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
@@ -26,6 +27,7 @@ func (srv *Server) handleWebhook(w http.ResponseWriter, r *http.Request) {
 	log.Printf("webhook: received %s event from %s (ref=%s sha=%s)", event.Type, event.Repo, event.Ref, event.CommitSHA)
 
 	go func() {
+		ctx := context.Background() // don't use r.Context() — it's cancelled when handler returns
 		// Clone the repo to discover pipelines and trigger builds.
 		cloneDir, err := os.MkdirTemp("", "cicada-discover-*")
 		if err != nil {
@@ -34,7 +36,7 @@ func (srv *Server) handleWebhook(w http.ResponseWriter, r *http.Request) {
 		}
 		defer os.RemoveAll(cloneDir)
 
-		if err := runner.CloneRepo(r.Context(), event.CloneURL, event.CommitSHA, cloneDir); err != nil {
+		if err := runner.CloneRepo(ctx, event.CloneURL, event.CommitSHA, cloneDir); err != nil {
 			log.Printf("webhook: clone failed: %v", err)
 			return
 		}

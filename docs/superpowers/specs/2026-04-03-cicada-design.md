@@ -21,11 +21,11 @@ cicada/
   internal/
     model/            # domain types
     store/            # SQLite data access
-    runner/           # Docker execution engine
-    scheduler/        # job queue, build scheduling
-    webhook/          # forge webhook handlers
-    web/              # HTTP server, templates, HTMX
-    pipeline/         # YAML parsing, validation
+    runner/           # Docker execution engine; owns DAG execution logic
+    scheduler/        # build queue: accepts ForgeEvents, queues builds, dispatches to runner
+    webhook/          # forge webhook handlers; parses requests into ForgeEvents
+    web/              # HTTP server, templates, HTMX handlers
+    pipeline/         # YAML parsing, validation, DAG graph construction
   data/               # runtime default: SQLite DB + logs (configurable via --data-dir)
 ```
 
@@ -61,7 +61,7 @@ cicada/
 - `Status BuildStatus`
 - `ExitCode int`
 - `StartedAt, FinishedAt time.Time`
-- `LogFile string` — path relative to data dir
+- `LogFile string` — path relative to the data dir (e.g. `logs/<build-id>/<step-name>.log`)
 
 **BuildStatus** (string enum): `pending`, `running`, `success`, `failure`, `cancelled`
 
@@ -173,7 +173,7 @@ type ForgeEvent struct {
 
 **GitHub implementation:**
 - Validates `X-Hub-Signature-256` HMAC on every request.
-- Parses `push` and `pull_request` event payloads.
+- Parses `push` and `pull_request` event payloads. Tag pushes arrive as GitHub `push` events with a `refs/tags/` ref and are classified as `EventType` `tag`.
 - Webhook secret configured via `CICADA_GITHUB_WEBHOOK_SECRET` environment variable.
 
 Webhook endpoint: `POST /webhooks/{provider}`
@@ -201,7 +201,7 @@ Webhook endpoint: `POST /webhooks/{provider}`
 - Live log output via Server-Sent Events (SSE); HTMX's `hx-ext="sse"` handles the subscription.
 - Build detail page uses SSE to update step statuses in real-time.
 
-**Styling:** Minimal classless CSS (Simple.css or Pico.css), embedded in binary.
+**Styling:** Minimal classless CSS (Pico.css), embedded in binary.
 
 **Static assets:** HTMX JS and CSS embedded via `go:embed`. No build step, no Node.js.
 

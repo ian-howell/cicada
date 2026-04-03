@@ -48,8 +48,8 @@ func (sc *Scheduler) HandleEvent(event *model.ForgeEvent, pipelineName string) e
 	return nil
 }
 
-// DispatchForgeEvent clones the repo, discovers pipelines matching the event trigger,
-// creates a build for each, and dispatches them to the runner.
+// DispatchForgeEvent reads pipeline definitions from cloneDir/.cicada, filters by
+// event trigger type, and dispatches one build per matching pipeline to the runner.
 func (sc *Scheduler) DispatchForgeEvent(event *model.ForgeEvent, cloneDir string) error {
 	pipelines, err := pipeline.ParseDir(filepath.Join(cloneDir, ".cicada"))
 	if err != nil {

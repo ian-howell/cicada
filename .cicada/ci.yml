@@ -14,6 +14,6 @@ steps:
       - vet
   - name: build
     commands:
-      - go build -buildvcs=false ./cmd/cicada
+      - go build -buildvcs=false -o /tmp/cicada ./cmd/cicada
     dependsOn:
       - test

@@ -56,12 +56,22 @@ func (r *Runner) executeDAG(ctx context.Context, build *model.Build, p *model.Pi
 			// Wait for all dependencies.
 			cancelled := false
 			for _, dep := range step.DependsOn {
-				<-stepDone[dep]
-				statusMu.Lock()
-				depStatus := stepStatus[dep]
-				statusMu.Unlock()
-				if depStatus != model.StatusSuccess {
-					cancelled = true
+				select {
+				case <-stepDone[dep]:
+					statusMu.Lock()
+					depStatus := stepStatus[dep]
+					statusMu.Unlock()
+					if depStatus != model.StatusSuccess {
+						cancelled = true
+					}
+				case <-ctx.Done():
+					statusMu.Lock()
+					stepStatus[step.Name] = model.StatusCancelled
+					statusMu.Unlock()
+					if err := r.store.UpdateStepResult(build.ID, step.Name, model.StatusCancelled, 0, nil, nil); err != nil {
+						log.Printf("runner: failed to update step result for %q: %v", step.Name, err)
+					}
+					return
 				}
 			}
 

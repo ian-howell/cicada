@@ -5,7 +5,8 @@ import (
 )
 
 // TopologicalOrder returns steps in an order where each step appears after
-// all of its dependencies. Assumes the pipeline has already been validated (no cycles).
+// all of its dependencies. The pipeline must have been validated (via Validate)
+// before calling this function; unknown dependency names produce undefined behavior.
 func TopologicalOrder(steps []model.Step) []model.Step {
 	deps := make(map[string][]string, len(steps))
 	for _, s := range steps {

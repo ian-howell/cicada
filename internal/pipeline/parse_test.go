@@ -101,5 +101,64 @@ steps:
 	}
 }
 
-// Ensure model import is used (avoids "imported and not used" errors in test file).
-var _ *model.Pipeline
+func TestParseFile_DefaultName(t *testing.T) {
+	dir := t.TempDir()
+	path := writeFile(t, dir, "mypipeline.yml", `
+image: golang:1.22
+steps:
+  - name: build
+    commands:
+      - go build ./...
+`)
+	p, err := ParseFile(path)
+	if err != nil {
+		t.Fatalf("ParseFile() error = %v", err)
+	}
+	if p.Name != "mypipeline" {
+		t.Errorf("Name = %q, want %q", p.Name, "mypipeline")
+	}
+}
+
+func TestParseDir(t *testing.T) {
+	dir := t.TempDir()
+
+	writeFile(t, dir, "alpha.yml", `
+name: alpha
+image: golang:1.22
+steps:
+  - name: build
+    commands:
+      - go build ./...
+`)
+	writeFile(t, dir, "beta.yaml", `
+name: beta
+image: golang:1.22
+steps:
+  - name: test
+    commands:
+      - go test ./...
+`)
+	writeFile(t, dir, "notes.txt", "this file should be ignored")
+
+	pipelines, err := ParseDir(dir)
+	if err != nil {
+		t.Fatalf("ParseDir() error = %v", err)
+	}
+	if len(pipelines) != 2 {
+		t.Fatalf("len(pipelines) = %d, want 2", len(pipelines))
+	}
+
+	names := make(map[string]bool, len(pipelines))
+	for _, p := range pipelines {
+		names[p.Name] = true
+	}
+	if !names["alpha"] {
+		t.Errorf("expected pipeline %q to be present", "alpha")
+	}
+	if !names["beta"] {
+		t.Errorf("expected pipeline %q to be present", "beta")
+	}
+}
+
+// Compile-time check that the model import is used.
+var _ model.Pipeline

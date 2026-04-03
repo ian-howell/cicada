@@ -44,7 +44,7 @@ cicada/
 - `Image string` — overrides pipeline-level image (resolved at parse time; runner always sees a concrete image)
 - `Commands []string`
 - `Env map[string]string`
-- `DependsOn []string` — names of steps this step depends on (DAG)
+- `DependsOn []string` — names of steps this step depends on (DAG); YAML key: `dependsOn`
 
 **Build** (stored in DB):
 - `ID string` — ULID
@@ -91,21 +91,21 @@ steps:
   - name: test
     commands:
       - go test ./...
-    depends_on:
+    dependsOn:
       - vet
 
   - name: build
     image: golang:1.22-alpine  # step-level override
     commands:
       - go build ./cmd/cicada
-    depends_on:
+    dependsOn:
       - test
 ```
 
 **Validation rules:**
 - Every step must have a concrete image — either via the pipeline-level `image` or its own `image` field.
 - Step names must be unique within a pipeline.
-- `depends_on` references must name steps that exist in the same pipeline.
+- `dependsOn` references must name steps that exist in the same pipeline.
 - Circular dependencies are rejected at parse time.
 
 Images are resolved at parse time so the runner always sees a concrete image per step.
@@ -214,11 +214,21 @@ Webhook endpoint: `POST /webhooks/{provider}`
 - `scheduler/` — DAG ordering, failure propagation
 - `store/` — tested against a real in-memory SQLite (`:memory:`), not mocked; migrations run in test setup
 
-**Integration tests** (`go test -tags=integration ./...`):
-- Tagged with `//go:build integration` to keep `go test ./...` fast.
+**Integration tests** (Docker-dependent, opt-in via env var):
+- Gated with `t.Skip` on a `CICADA_TEST_DOCKER` env var — always compiled, skipped when Docker isn't available.
+- Running `go test ./...` compiles integration test files and catches build errors; slow Docker tests are skipped unless `CICADA_TEST_DOCKER=1` is set.
 - `runner/` — actually spin up containers, run commands, verify exit codes and log output.
 - End-to-end: webhook receipt → clone → parse → execute → verify build status in DB.
 - Use small test configs in `testdata/` with known `.cicada/*.yml` files.
+
+```go
+func TestRunStep(t *testing.T) {
+    if os.Getenv("CICADA_TEST_DOCKER") == "" {
+        t.Skip("set CICADA_TEST_DOCKER=1 to run Docker integration tests")
+    }
+    // ...
+}
+```
 
 **Test helpers:** Written in `_test.go` files alongside the tests that use them (e.g. in-memory DB setup in `store/`, signed webhook request builder in `webhook/`). No shared `testutil` package — extract one only if real duplication emerges across packages.
 
@@ -229,7 +239,7 @@ Once Cicada is functional, add `.cicada/ci.yml` to the Cicada repository itself.
 - `go vet ./...`
 - `go test ./...` (depends on vet)
 - `go build ./cmd/cicada` (depends on test)
-- `go test -tags=integration ./...` as a separate step depending on unit tests
+- `CICADA_TEST_DOCKER=1 go test ./...` as a separate step depending on unit tests, run in a Docker-capable environment
 
 The pipeline YAML can be written early and validated manually before Cicada can run it itself. Dogfooding is a milestone goal, not a v1 blocker.
 

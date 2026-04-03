@@ -53,12 +53,15 @@ func (s *Store) ListBuilds() ([]*model.Build, error) {
 
 // UpdateBuildStatus updates the status and optional timestamps of a build.
 func (s *Store) UpdateBuildStatus(id string, status model.BuildStatus, startedAt, finishedAt *time.Time) error {
-	_, err := s.db.Exec(`
+	res, err := s.db.Exec(`
 		UPDATE builds SET status = ?, started_at = ?, finished_at = ? WHERE id = ?`,
 		string(status), startedAt, finishedAt, id,
 	)
 	if err != nil {
 		return fmt.Errorf("update build status: %w", err)
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return fmt.Errorf("build not found: %s", id)
 	}
 	return nil
 }

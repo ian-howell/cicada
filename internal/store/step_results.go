@@ -45,7 +45,7 @@ func (s *Store) ListStepResults(buildID string) ([]*model.StepResult, error) {
 
 // UpdateStepResult updates a step result's status, exit code, and timestamps.
 func (s *Store) UpdateStepResult(buildID, stepName string, status model.BuildStatus, exitCode int, startedAt, finishedAt *time.Time) error {
-	_, err := s.db.Exec(`
+	res, err := s.db.Exec(`
 		UPDATE step_results SET status = ?, exit_code = ?, started_at = ?, finished_at = ?
 		WHERE build_id = ? AND step_name = ?`,
 		string(status), exitCode, startedAt, finishedAt, buildID, stepName,
@@ -53,14 +53,17 @@ func (s *Store) UpdateStepResult(buildID, stepName string, status model.BuildSta
 	if err != nil {
 		return fmt.Errorf("update step result: %w", err)
 	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return fmt.Errorf("step result not found: build=%s step=%s", buildID, stepName)
+	}
 	return nil
 }
 
-func scanStepResult(rows *sql.Rows) (*model.StepResult, error) {
+func scanStepResult(s scanner) (*model.StepResult, error) {
 	var sr model.StepResult
 	var status string
 	var startedAt, finishedAt sql.NullTime
-	err := rows.Scan(
+	err := s.Scan(
 		&sr.BuildID, &sr.StepName, &status, &sr.ExitCode,
 		&startedAt, &finishedAt, &sr.LogFile,
 	)

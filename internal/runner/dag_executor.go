@@ -70,16 +70,30 @@ func (r *Runner) executeDAG(ctx context.Context, build *model.Build, p *model.Pi
 				statusMu.Lock()
 				stepStatus[step.Name] = model.StatusCancelled
 				statusMu.Unlock()
-				r.store.UpdateStepResult(build.ID, step.Name, model.StatusCancelled, 0, nil, nil)
+				if err := r.store.UpdateStepResult(build.ID, step.Name, model.StatusCancelled, 0, nil, nil); err != nil {
+					log.Printf("runner: failed to update step result for %q: %v", step.Name, err)
+				}
 				return
 			}
 
 			// Acquire concurrency semaphore.
-			sem <- struct{}{}
+			select {
+			case sem <- struct{}{}:
+			case <-ctx.Done():
+				statusMu.Lock()
+				stepStatus[step.Name] = model.StatusCancelled
+				statusMu.Unlock()
+				if err := r.store.UpdateStepResult(build.ID, step.Name, model.StatusCancelled, 0, nil, nil); err != nil {
+					log.Printf("runner: failed to update step result for %q: %v", step.Name, err)
+				}
+				return
+			}
 			defer func() { <-sem }()
 
 			now := time.Now().UTC()
-			r.store.UpdateStepResult(build.ID, step.Name, model.StatusRunning, 0, &now, nil)
+			if err := r.store.UpdateStepResult(build.ID, step.Name, model.StatusRunning, 0, &now, nil); err != nil {
+				log.Printf("runner: failed to update step result for %q: %v", step.Name, err)
+			}
 
 			log.Printf("runner: executing step %q", step.Name)
 			exitCode, err := RunStep(ctx, step, volumeName, repoDir, logDir)
@@ -90,7 +104,9 @@ func (r *Runner) executeDAG(ctx context.Context, build *model.Build, p *model.Pi
 				statusMu.Lock()
 				stepStatus[step.Name] = model.StatusFailure
 				statusMu.Unlock()
-				r.store.UpdateStepResult(build.ID, step.Name, model.StatusFailure, -1, &now, &fin)
+				if err := r.store.UpdateStepResult(build.ID, step.Name, model.StatusFailure, -1, &now, &fin); err != nil {
+					log.Printf("runner: failed to update step result for %q: %v", step.Name, err)
+				}
 				return
 			}
 
@@ -101,7 +117,9 @@ func (r *Runner) executeDAG(ctx context.Context, build *model.Build, p *model.Pi
 			statusMu.Lock()
 			stepStatus[step.Name] = status
 			statusMu.Unlock()
-			r.store.UpdateStepResult(build.ID, step.Name, status, exitCode, &now, &fin)
+			if err := r.store.UpdateStepResult(build.ID, step.Name, status, exitCode, &now, &fin); err != nil {
+				log.Printf("runner: failed to update step result for %q: %v", step.Name, err)
+			}
 			log.Printf("runner: step %q finished with status %s (exit=%d)", step.Name, status, exitCode)
 		}()
 	}

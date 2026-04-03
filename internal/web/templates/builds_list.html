@@ -1,0 +1,32 @@
+{{template "base.html" .}}
+{{define "content"}}
+<h2>Builds</h2>
+<div id="builds-list" hx-get="/builds" hx-trigger="every 5s" hx-swap="outerHTML">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Pipeline</th>
+                <th>Ref</th>
+                <th>Commit</th>
+                <th>Status</th>
+                <th>Created</th>
+            </tr>
+        </thead>
+        <tbody>
+        {{range .Builds}}
+        <tr>
+            <td><a href="/builds/{{.ID}}">{{slice .ID 0 8}}</a></td>
+            <td>{{.PipelineName}}</td>
+            <td>{{.Ref}}</td>
+            <td>{{slice .CommitSHA 0 7}}</td>
+            <td>{{.Status}}</td>
+            <td>{{.CreatedAt.Format "2006-01-02 15:04:05"}}</td>
+        </tr>
+        {{else}}
+        <tr><td colspan="6">No builds yet.</td></tr>
+        {{end}}
+        </tbody>
+    </table>
+</div>
+{{end}}

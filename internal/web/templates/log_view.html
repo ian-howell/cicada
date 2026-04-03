@@ -1,0 +1,11 @@
+{{template "base.html" .}}
+{{define "content"}}
+<h2>Log: {{.StepName}}</h2>
+<p><a href="/builds/{{.BuildID}}">← back to build</a></p>
+<pre id="log-output">{{.LogContent}}</pre>
+{{if .Live}}
+<div hx-ext="sse" sse-connect="/api/builds/{{.BuildID}}/steps/{{.StepName}}/log/stream">
+    <div sse-swap="message" hx-swap="beforeend" hx-target="#log-output"></div>
+</div>
+{{end}}
+{{end}}

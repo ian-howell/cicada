@@ -1,0 +1,25 @@
+{{template "base.html" .}}
+{{define "content"}}
+<h2>Build {{slice .Build.ID 0 8}}</h2>
+<dl>
+    <dt>Pipeline</dt><dd>{{.Build.PipelineName}}</dd>
+    <dt>Ref</dt><dd>{{.Build.Ref}}</dd>
+    <dt>Commit</dt><dd>{{.Build.CommitSHA}}</dd>
+    <dt>Status</dt><dd id="build-status" hx-get="/api/builds/{{.Build.ID}}" hx-trigger="every 3s" hx-swap="innerHTML" hx-select="#build-status-inner"><span id="build-status-inner">{{.Build.Status}}</span></dd>
+    <dt>Created</dt><dd>{{.Build.CreatedAt.Format "2006-01-02 15:04:05"}}</dd>
+</dl>
+<h3>Steps</h3>
+<table>
+    <thead><tr><th>Name</th><th>Status</th><th>Exit Code</th><th>Log</th></tr></thead>
+    <tbody>
+    {{range .Steps}}
+    <tr>
+        <td>{{.StepName}}</td>
+        <td>{{.Status}}</td>
+        <td>{{.ExitCode}}</td>
+        <td><a href="/builds/{{$.Build.ID}}/steps/{{.StepName}}/log">log</a></td>
+    </tr>
+    {{end}}
+    </tbody>
+</table>
+{{end}}

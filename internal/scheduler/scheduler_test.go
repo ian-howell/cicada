@@ -15,10 +15,9 @@ func TestScheduler_HandleEvent_CreatesBuild(t *testing.T) {
 	}
 	defer s.Close()
 
-	// A runner that just records what it was asked to run.
-	var ranBuildID string
+	ranCh := make(chan string, 1)
 	fakeRun := func(build *model.Build) {
-		ranBuildID = build.ID
+		ranCh <- build.ID
 	}
 
 	sched := New(s, fakeRun)
@@ -36,11 +35,13 @@ func TestScheduler_HandleEvent_CreatesBuild(t *testing.T) {
 		t.Fatalf("HandleEvent() error = %v", err)
 	}
 
-	// Give the goroutine a moment to run.
-	time.Sleep(50 * time.Millisecond)
-
-	if ranBuildID == "" {
-		t.Error("expected runner to be called, but it was not")
+	select {
+	case ranBuildID := <-ranCh:
+		if ranBuildID == "" {
+			t.Error("expected non-empty build ID from runner")
+		}
+	case <-time.After(time.Second):
+		t.Error("expected runner to be called within 1 second, but it was not")
 	}
 
 	builds, err := s.ListBuilds()

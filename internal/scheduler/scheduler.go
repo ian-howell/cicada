@@ -1,7 +1,6 @@
 package scheduler
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"path/filepath"
@@ -44,16 +43,14 @@ func (sc *Scheduler) HandleEvent(event *model.ForgeEvent, pipelineName string) e
 	}
 
 	log.Printf("scheduler: dispatching build %s (pipeline=%s ref=%s)", build.ID, pipelineName, event.Ref)
-	go func() {
-		sc.runFn(build)
-	}()
+	go sc.runFn(build)
 
 	return nil
 }
 
 // DispatchForgeEvent clones the repo, discovers pipelines matching the event trigger,
 // creates a build for each, and dispatches them to the runner.
-func (sc *Scheduler) DispatchForgeEvent(ctx context.Context, event *model.ForgeEvent, cloneDir string) error {
+func (sc *Scheduler) DispatchForgeEvent(event *model.ForgeEvent, cloneDir string) error {
 	pipelines, err := pipeline.ParseDir(filepath.Join(cloneDir, ".cicada"))
 	if err != nil {
 		return fmt.Errorf("parse pipelines: %w", err)

@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianhomer/cicada/internal/model"
-	"github.com/ianhomer/cicada/internal/pipeline"
+	"github.com/ian-howell/cicada/internal/model"
+	"github.com/ian-howell/cicada/internal/pipeline"
 )
 
 // executeDAG runs pipeline steps concurrently according to their dependency graph.

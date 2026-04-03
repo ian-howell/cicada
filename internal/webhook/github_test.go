@@ -10,7 +10,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ianhomer/cicada/internal/model"
+	"github.com/ian-howell/cicada/internal/model"
 )
 
 const testSecret = "testsecret"

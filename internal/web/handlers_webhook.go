@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/ianhomer/cicada/internal/runner"
+	"github.com/ian-howell/cicada/internal/runner"
 )
 
 func (srv *Server) handleWebhook(w http.ResponseWriter, r *http.Request) {

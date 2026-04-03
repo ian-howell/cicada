@@ -3,7 +3,7 @@ package pipeline
 import (
 	"fmt"
 
-	"github.com/ianhomer/cicada/internal/model"
+	"github.com/ian-howell/cicada/internal/model"
 )
 
 // Validate checks that a pipeline is structurally valid:

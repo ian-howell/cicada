@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ianhomer/cicada/internal/model"
+	"github.com/ian-howell/cicada/internal/model"
 	"gopkg.in/yaml.v3"
 )
 

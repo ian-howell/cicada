@@ -3,7 +3,7 @@ package webhook
 import (
 	"net/http"
 
-	"github.com/ianhomer/cicada/internal/model"
+	"github.com/ian-howell/cicada/internal/model"
 )
 
 // ForgeProvider parses raw HTTP webhook requests into normalized ForgeEvents.

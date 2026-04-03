@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianhomer/cicada/internal/model"
+	"github.com/ian-howell/cicada/internal/model"
 )
 
 func TestRunStep_Success(t *testing.T) {

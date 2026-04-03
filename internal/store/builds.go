@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ianhomer/cicada/internal/model"
+	"github.com/ian-howell/cicada/internal/model"
 )
 
 // CreateBuild inserts a new build record.

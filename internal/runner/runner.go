@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/ianhomer/cicada/internal/model"
-	"github.com/ianhomer/cicada/internal/pipeline"
-	"github.com/ianhomer/cicada/internal/store"
+	"github.com/ian-howell/cicada/internal/model"
+	"github.com/ian-howell/cicada/internal/pipeline"
+	"github.com/ian-howell/cicada/internal/store"
 	"github.com/oklog/ulid/v2"
 )
 

@@ -7,9 +7,9 @@ import (
 	"io/fs"
 	"net/http"
 
-	"github.com/ianhomer/cicada/internal/scheduler"
-	"github.com/ianhomer/cicada/internal/store"
-	"github.com/ianhomer/cicada/internal/webhook"
+	"github.com/ian-howell/cicada/internal/scheduler"
+	"github.com/ian-howell/cicada/internal/store"
+	"github.com/ian-howell/cicada/internal/webhook"
 )
 
 //go:embed templates/*.html

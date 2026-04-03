@@ -1,4 +1,4 @@
-module github.com/ianhomer/cicada
+module github.com/ian-howell/cicada
 
 go 1.26.1
 

@@ -10,12 +10,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ianhomer/cicada/internal/model"
-	"github.com/ianhomer/cicada/internal/runner"
-	"github.com/ianhomer/cicada/internal/scheduler"
-	"github.com/ianhomer/cicada/internal/store"
-	"github.com/ianhomer/cicada/internal/web"
-	"github.com/ianhomer/cicada/internal/webhook"
+	"github.com/ian-howell/cicada/internal/model"
+	"github.com/ian-howell/cicada/internal/runner"
+	"github.com/ian-howell/cicada/internal/scheduler"
+	"github.com/ian-howell/cicada/internal/store"
+	"github.com/ian-howell/cicada/internal/web"
+	"github.com/ian-howell/cicada/internal/webhook"
 )
 
 func main() {

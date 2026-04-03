@@ -3,7 +3,7 @@ package pipeline
 import (
 	"testing"
 
-	"github.com/ianhomer/cicada/internal/model"
+	"github.com/ian-howell/cicada/internal/model"
 )
 
 func TestTopologicalOrder_Simple(t *testing.T) {

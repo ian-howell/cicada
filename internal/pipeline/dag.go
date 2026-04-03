@@ -1,7 +1,7 @@
 package pipeline
 
 import (
-	"github.com/ianhomer/cicada/internal/model"
+	"github.com/ian-howell/cicada/internal/model"
 )
 
 // TopologicalOrder returns steps in an order where each step appears after

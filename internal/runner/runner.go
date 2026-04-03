@@ -96,6 +96,7 @@ func (r *Runner) runBuild(ctx context.Context, build *model.Build) error {
 }
 
 // newBuildID generates a new ULID for use as a build ID.
+// Called by the scheduler when creating new Build records.
 func newBuildID() string {
 	return ulid.Make().String()
 }

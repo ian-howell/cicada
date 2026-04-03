@@ -9,7 +9,7 @@ import (
 // CloneRepo clones the given repository URL into destDir and checks out the given commit SHA.
 // Uses the system git binary.
 func CloneRepo(ctx context.Context, cloneURL, commitSHA, destDir string) error {
-	// Shallow clone to minimize bandwidth.
+	// Clone repository without checking out files.
 	cmd := exec.CommandContext(ctx, "git", "clone", "--no-checkout", cloneURL, destDir)
 	if out, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("git clone: %w\n%s", err, out)

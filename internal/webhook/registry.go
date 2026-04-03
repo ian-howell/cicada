@@ -3,6 +3,7 @@ package webhook
 import "os"
 
 // Registry holds all registered forge providers.
+// It is not safe for concurrent use; providers are registered once at startup.
 type Registry struct {
 	providers map[string]ForgeProvider
 }

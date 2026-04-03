@@ -1,7 +1,6 @@
 package webhook
 
 import (
-	"bytes"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
@@ -21,6 +20,9 @@ type GitHubProvider struct {
 
 // NewGitHubProvider creates a GitHub provider with the given webhook secret.
 func NewGitHubProvider(secret string) *GitHubProvider {
+	if secret == "" {
+		panic("webhook secret must not be empty")
+	}
 	return &GitHubProvider{secret: secret}
 }
 
@@ -33,7 +35,6 @@ func (p *GitHubProvider) ParseWebhook(r *http.Request) (*model.ForgeEvent, error
 	if err != nil {
 		return nil, fmt.Errorf("read request body: %w", err)
 	}
-	r.Body = io.NopCloser(bytes.NewReader(body)) // restore for potential re-reads
 
 	if err := p.validateSignature(r.Header.Get("X-Hub-Signature-256"), body); err != nil {
 		return nil, err
@@ -123,6 +124,9 @@ type githubPRPayload struct {
 	} `json:"sender"`
 }
 
+// parsePullRequest handles pull_request events. All actions (opened, closed,
+// synchronize, etc.) are normalized to EventPullRequest; action filtering is
+// a future enhancement.
 func (p *GitHubProvider) parsePullRequest(body []byte) (*model.ForgeEvent, error) {
 	var payload githubPRPayload
 	if err := json.Unmarshal(body, &payload); err != nil {

@@ -96,6 +96,37 @@ func TestGitHubProvider_ParseWebhook_BadSignature(t *testing.T) {
 	}
 }
 
+func TestGitHubProvider_ParseWebhook_MissingSignatureHeader(t *testing.T) {
+	payload := `{"ref":"refs/heads/main","after":"abc","repository":{"full_name":"a/b","clone_url":"https://github.com/a/b.git"},"sender":{"login":"u"}}`
+
+	req := httptest.NewRequest(http.MethodPost, "/webhooks/github", bytes.NewBufferString(payload))
+	req.Header.Set("X-GitHub-Event", "push")
+	// No X-Hub-Signature-256 header set
+
+	p := NewGitHubProvider(testSecret)
+	_, err := p.ParseWebhook(req)
+	if err == nil {
+		t.Error("ParseWebhook() expected error for missing signature header, got nil")
+	}
+}
+
+func TestGitHubProvider_ParseWebhook_WrongHMAC(t *testing.T) {
+	payload := `{"ref":"refs/heads/main","after":"abc","repository":{"full_name":"a/b","clone_url":"https://github.com/a/b.git"},"sender":{"login":"u"}}`
+
+	// Sign with a different secret to produce valid hex but wrong HMAC value
+	wrongSig := signPayload(t, "wrongsecret", payload)
+
+	req := httptest.NewRequest(http.MethodPost, "/webhooks/github", bytes.NewBufferString(payload))
+	req.Header.Set("X-GitHub-Event", "push")
+	req.Header.Set("X-Hub-Signature-256", wrongSig)
+
+	p := NewGitHubProvider(testSecret)
+	_, err := p.ParseWebhook(req)
+	if err == nil {
+		t.Error("ParseWebhook() expected error for HMAC mismatch, got nil")
+	}
+}
+
 func TestGitHubProvider_ParseWebhook_PullRequest(t *testing.T) {
 	payload := `{
 		"action": "opened",

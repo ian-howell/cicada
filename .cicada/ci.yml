@@ -1,0 +1,19 @@
+name: ci
+image: golang:1.22
+on:
+  - push
+  - pull_request
+steps:
+  - name: vet
+    commands:
+      - go vet ./...
+  - name: test
+    commands:
+      - go test ./...
+    dependsOn:
+      - vet
+  - name: build
+    commands:
+      - go build ./cmd/cicada
+    dependsOn:
+      - test

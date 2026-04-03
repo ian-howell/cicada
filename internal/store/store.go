@@ -28,6 +28,11 @@ func New(dataDir string) (*Store, error) {
 
 	db.SetMaxOpenConns(1) // SQLite is not safe for concurrent writes
 
+	if _, err := db.Exec("PRAGMA foreign_keys = ON"); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("enable foreign keys: %w", err)
+	}
+
 	if err := applyMigrations(db); err != nil {
 		db.Close()
 		return nil, fmt.Errorf("apply migrations: %w", err)
